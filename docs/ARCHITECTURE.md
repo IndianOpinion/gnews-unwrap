@@ -135,21 +135,25 @@ network.
 
 ### Q4. AMP markers in the article key
 
-Stripped by default (`stripAmpMarkers: true`), with an option to keep them.
-This reverses the PRD default. The reason: AMP pages and canonical pages of
-the same article are far more common than outlets that serve a different
-article at an AMP path, and missed dedup is the failure the library exists to
-prevent. Stripped markers: a leading `/amp/` segment, a trailing `/amp` or
-`/amp/`, `.amp` before an optional `.html`, the `amp` query parameter with or
-without a value, and `outputType=amp`. Identity parameters are never stripped.
-The `amp.` host label is handled by the outlet key in every mode.
+Kept by default, as the PRD says (`stripAmpMarkers: false`); callers turn
+stripping on with `stripAmpMarkers: true`. No data was available to justify
+reversing the PRD default, and a false merge of two different articles is
+the worse failure: it hides a story and is then trusted. The `amp.` host
+label is folded by the outlet key in every mode, so many AMP variants still
+match.
+
+Stripped markers when the option is on: a leading `/amp/` segment, a
+trailing `/amp` or `/amp/`, `.amp` before an optional `.html`, the `amp`
+query parameter with or without a value, and `outputType=amp`. Identity
+parameters are never stripped.
 
 ### Q5. Concurrency in resolveMany
 
 `resolveMany()` uses curl_multi when the transport is a `ConcurrentTransport`
 (the curl transport is) and `concurrency` is above 1. Default concurrency is
-4. Every other case, and `concurrency: 1`, resolves links one after another.
-The pause (`pauseMs`) applies before each network resolution in sequential
+1, so 0.1.0 is sequential by default as the PRD says; concurrency is opt-in
+because parallel requests draw Google's rate limits sooner. Every other case
+resolves links one after another. The pause (`pauseMs`) applies before each network resolution in sequential
 mode and before each round in concurrent mode. The batchexecute endpoint can
 take several ids in one POST, but public reports say results do not keep
 input order, so each link still gets its own POST.
@@ -190,8 +194,7 @@ with the same acceptance rules, and never preferred over the canonical URL.
 - **Method on cache hits.** A positive hit reports method `cache` and the
   original method in `originalMethod`. A negative hit reports method `none`,
   the stored reason, and `fromNegativeCache = true`.
-- **Extra reason codes.** The PRD's codes plus `missing_parameter`,
-  `unknown_id_format`, `decode_failed`, `unexpected_status`,
+- **Extra reason codes.** The PRD's codes plus `unknown_id_format`, `decode_failed`, `unexpected_status`,
   `private_address`, `no_candidate` and `not_redirected`, so that every
   attempt carries a precise reason.
 - **Google hosts.** `google.<tld>` and every subdomain of it, `gstatic.com`
@@ -205,10 +208,25 @@ with the same acceptance rules, and never preferred over the canonical URL.
 - **Requests to Google go over https**, even for `http:` wrappers and for
   `http:` Location headers between Google hosts.
 - **Generic mode** reads at most 1 KB of each body, refuses non-HTTP schemes,
-  and checks every hop with `AddressGuard` (loopback, RFC 1918, link-local,
-  carrier-grade NAT, reserved, IPv6 unique-local and link-local, IPv4-mapped
-  IPv6, numeric host forms, `localhost`). The DNS lookup is injectable for
-  tests.
+  refuses hops with userinfo or a backslash (URL parsers disagree on which
+  host those reach), and checks every hop, before it is requested, with
+  `AddressGuard`. The guard uses explicit range tables rather than
+  `filter_var` flags, whose coverage differs between PHP versions: IPv4
+  "this network", RFC 1918, loopback, link-local and metadata, carrier-grade
+  NAT, documentation, benchmarking, multicast and reserved; IPv6 unspecified,
+  loopback, unique-local, link-local, site-local, multicast, documentation,
+  Teredo and discard; mapped, NAT64 and 6to4 addresses are checked on the
+  IPv4 address they carry. Numeric host forms and `localhost` are refused.
+  Hosts are looked up for A and AAAA records. The lookup is injectable for
+  tests. DNS rebinding is not prevented (the transport resolves again); the
+  README says so.
+- **Cache hits are re-validated.** A stored positive result whose target
+  fails today's acceptance rules (an own host added since, a tampered
+  shared store) is deleted and treated as a miss.
+- **resolveMany() isolates errors.** In the concurrent path each request
+  fails or succeeds on its own; a transport whose `sendMany()` throws fails
+  that round's requests with `network_error`, as `send()` does in the
+  sequential path.
 - **Fake transport in `src/`.** `FakeTransport`, `FakeConcurrentTransport`
   and `FakeClock` ship with the package so callers can test their own
   importers without the network.

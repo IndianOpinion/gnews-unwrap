@@ -27,7 +27,7 @@ Without Composer, download a release, then:
 require '/path/to/gnews-unwrap/bootstrap.php';
 ```
 
-`ext-curl` is used when present (and enables concurrent `resolveMany()`); without it the library falls back to PHP streams. `ext-intl` is used for IDN hosts when present.
+`ext-curl` is used when present (and allows concurrent `resolveMany()` when you set `concurrency` above 1); without it the library falls back to PHP streams. `ext-intl` is used for IDN hosts when present.
 
 ## Quick start
 
@@ -71,7 +71,10 @@ $hosts->key('m.com');                              // "m.com" (never past the re
 
 $keys = new ArticleKeyBuilder($hosts);
 $keys->key('https://www.example.com/news/story-1/?utm_source=x#top');  // "example.com/news/story-1"
-$keys->key('http://amp.example.com/news/story-1/amp');                 // "example.com/news/story-1"
+$keys->key('http://amp.example.com/news/story-1/amp');                 // "example.com/news/story-1/amp"
+
+$ampKeys = new ArticleKeyBuilder($hosts, stripAmpMarkers: true);
+$ampKeys->key('http://amp.example.com/news/story-1/amp');              // "example.com/news/story-1"
 ```
 
 Unwrap first, then normalise. A wrapper passed to either function keys on `news.google.com`.
@@ -124,7 +127,7 @@ $unwrapper = new Unwrapper($config, transport: null, cache: $myCache, logger: $m
 | `negativeTtl` | 1 hour | cache lifetime of an unresolved result; transient reasons are never cached |
 | `breakerThreshold`, `breakerWindow`, `breakerCooldown` | 3, 60 s, 300 s | open the circuit breaker for 5 minutes after 3 `rate_limited` in 60 s |
 | `pauseMs` | 0 | pause between network resolutions; set 250 to 1000 for bulk work |
-| `concurrency` | 4 | links in flight in `resolveMany()` on curl; 1 means strictly sequential |
+| `concurrency` | 1 | links in flight in `resolveMany()` on curl; 1 is strictly sequential, raise it with care (rate limits) |
 | `ownHosts` | empty | your own sites, never a valid target |
 | `extraGoogleHosts` | empty | added to the built-in Google list |
 | `allowPrivateTargets` | off | accept IP literal, `localhost` and private targets |
@@ -134,7 +137,7 @@ $unwrapper = new Unwrapper($config, transport: null, cache: $myCache, logger: $m
 | `outletAliases` | empty | `['business.example.com' => 'example.com', '*.example.org' => 'example.org']` |
 | `trackingParams` | `utm_*`, `fbclid`, `gclid` and 30 more | dropped from article keys |
 | `allowParams` | none | keep only these query names in article keys |
-| `stripAmpMarkers` | on | drop `/amp`, `.amp`, `?amp=1`, `outputType=amp` from article keys |
+| `stripAmpMarkers` | off | drop `/amp`, `.amp`, `?amp=1`, `outputType=amp` from article keys |
 | `identityParams` | empty | `['example.org' => ['id']]`: never drop these on that host |
 
 ## The result
@@ -159,7 +162,7 @@ $unwrapper = new Unwrapper($config, transport: null, cache: $myCache, logger: $m
 
 `toArray()` gives a JSON-safe array for storage and logs; `Result::fromArray()` reads it back.
 
-Reason codes: `invalid_url`, `not_google_news`, `not_an_article_link`, `malformed_id`, `missing_parameter`, `opaque_id`, `unknown_id_format`, `decode_failed`, `signature_missing`, `format_changed`, `too_many_redirects`, `redirect_loop`, `timeout`, `budget_exceeded`, `network_error`, `rate_limited`, `forbidden`, `gone`, `upstream_error`, `unexpected_status`, `consent_wall`, `login_wall`, `unexpected_content_type`, `circuit_open`, `private_address`, `bad_target`, `no_candidate`, `not_redirected`.
+Reason codes: `invalid_url`, `not_google_news`, `not_an_article_link`, `malformed_id`, `opaque_id`, `unknown_id_format`, `decode_failed`, `signature_missing`, `format_changed`, `too_many_redirects`, `redirect_loop`, `timeout`, `budget_exceeded`, `network_error`, `rate_limited`, `forbidden`, `gone`, `upstream_error`, `unexpected_status`, `consent_wall`, `login_wall`, `unexpected_content_type`, `circuit_open`, `private_address`, `bad_target`, `no_candidate`, `not_redirected`.
 
 ## How it works
 
@@ -294,7 +297,7 @@ Non-wrappers come back unchanged at no cost. See `examples/self-heal.php`, and [
 - **The built-in suffix list is short.** It covers common multi-part suffixes in the main news markets. Load a Public Suffix List file for full coverage. The library never downloads it.
 - **IDN without ext-intl.** Unicode hosts are lowercased and kept in Unicode, and `HostNormaliser::normalise()` flags `idnSkipped`. A Unicode host and its punycode form then give different keys.
 - **Streams transport.** PHP's http wrapper uses one timeout for connecting and for each read, so the separate connect timeout is not enforced there; the total deadline is checked between body chunks.
-- **Generic mode DNS checks.** Private addresses are refused after a DNS lookup, but the transport does its own lookup afterwards, so a hostile DNS server could still answer differently the second time. Do not enable generic mode on untrusted input without an egress firewall.
+- **Generic mode DNS checks.** Every hop is checked before it is requested: private, loopback, link-local, metadata and other special addresses are refused, as literals and after an A and AAAA lookup. But the transport does its own lookup afterwards, so a hostile DNS server could still answer differently the second time (DNS rebinding). Do not enable generic mode on untrusted input without an egress firewall. With an outbound proxy, the checks see your DNS, not the proxy's.
 - **Concurrency and budgets.** In concurrent `resolveMany()`, a link's 15 s budget includes time spent waiting for other links in the same round.
 
 ## FAQ
@@ -305,7 +308,7 @@ Non-wrappers come back unchanged at no cost. See `examples/self-heal.php`, and [
 
 **Why not a headless browser?** It is heavy, slow and fragile, and it would mean getting past consent walls. Out of scope.
 
-**Why are AMP markers stripped from article keys by default?** So an article shared as its AMP page dedups against the canonical one. Some outlets serve different articles at `/amp` paths; set `stripAmpMarkers: false` if yours do.
+**Why are AMP markers kept in article keys by default?** Some outlets serve a different page at `/amp` paths, and merging two different articles is worse than missing one duplicate. The `amp.` host label is always folded by the outlet key. If your sources use `/amp` paths only for AMP copies, set `stripAmpMarkers: true`.
 
 **Can it run in a page request?** It can, but do not. Resolution can take seconds. Run it in a cron job, a queue worker or an import hook.
 
