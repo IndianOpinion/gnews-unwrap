@@ -1,0 +1,46 @@
+{
+    "name": "indianopinion/gnews-unwrap",
+    "description": "Resolve Google News wrapper links to the publisher URL, normalise outlet hosts and build canonical article keys for dedup.",
+    "type": "library",
+    "license": "MIT",
+    "keywords": ["google-news", "rss", "url", "unwrap", "redirect", "dedup", "news", "canonical-url"],
+    "homepage": "https://github.com/IndianOpinion/gnews-unwrap",
+    "support": {
+        "issues": "https://github.com/IndianOpinion/gnews-unwrap/issues",
+        "source": "https://github.com/IndianOpinion/gnews-unwrap",
+        "email": "hello@indianopinion.org"
+    },
+    "authors": [
+        {"name": "Indian Opinion", "email": "hello@indianopinion.org"}
+    ],
+    "require": {
+        "php": ">=8.1",
+        "ext-json": "*",
+        "ext-pcre": "*"
+    },
+    "require-dev": {
+        "phpstan/phpstan": "^2.1",
+        "phpunit/phpunit": "^10.5",
+        "squizlabs/php_codesniffer": "^3.10"
+    },
+    "suggest": {
+        "ext-curl": "Default HTTP transport, and concurrent resolveMany() through curl_multi.",
+        "ext-intl": "IDN hosts are converted to punycode with UTS 46 rules.",
+        "ext-mbstring": "Lowercasing of Unicode hosts when ext-intl is missing."
+    },
+    "autoload": {
+        "psr-4": {"IndianOpinion\\GnewsUnwrap\\": "src/"}
+    },
+    "autoload-dev": {
+        "psr-4": {"IndianOpinion\\GnewsUnwrap\\Tests\\": "tests/"}
+    },
+    "scripts": {
+        "test": "phpunit",
+        "stan": "phpstan analyse --no-progress",
+        "cs": "phpcs",
+        "check": ["@cs", "@stan", "@test"]
+    },
+    "config": {
+        "sort-packages": true
+    }
+}

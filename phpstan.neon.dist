@@ -1,0 +1,13 @@
+parameters:
+    level: 8
+    paths:
+        - src
+        - tests
+        - bootstrap.php
+        - examples
+    excludePaths:
+        - tests/fixtures
+        - tests/Support/BrokenConcurrentTransport.php
+    # Public methods validate their input at runtime for callers who do not
+    # run static analysis, so PHPDoc types are not treated as certain.
+    treatPhpDocTypesAsCertain: false

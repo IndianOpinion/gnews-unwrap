@@ -1,0 +1,41 @@
+{
+  "note": "redirect loop between Google hosts",
+  "exchanges": [
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://news.google.com/rss/articles/CBMiHEFVX3lxTE9wYXF1ZUZpeHR1cmVUb2tlbjAwMDI"
+      },
+      "response": {
+        "status": 302,
+        "headers": {
+          "Location": "https://news.google.com/hop/a"
+        }
+      }
+    },
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://news.google.com/hop/a"
+      },
+      "response": {
+        "status": 302,
+        "headers": {
+          "Location": "http://news.google.com/hop/b"
+        }
+      }
+    },
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://news.google.com/hop/b"
+      },
+      "response": {
+        "status": 302,
+        "headers": {
+          "Location": "https://news.google.com/rss/articles/CBMiHEFVX3lxTE9wYXF1ZUZpeHR1cmVUb2tlbjAwMDI"
+        }
+      }
+    }
+  ]
+}

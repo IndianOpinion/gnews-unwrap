@@ -1,0 +1,161 @@
+{
+  "note": "twelve Google hops, over the limit",
+  "exchanges": [
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://news.google.com/rss/articles/CBMiHEFVX3lxTE9wYXF1ZUZpeHR1cmVUb2tlbjAwMDI"
+      },
+      "response": {
+        "status": 302,
+        "headers": {
+          "Location": "https://news.google.com/hop/1"
+        }
+      }
+    },
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://news.google.com/hop/1"
+      },
+      "response": {
+        "status": 302,
+        "headers": {
+          "Location": "https://news.google.com/hop/2"
+        }
+      }
+    },
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://news.google.com/hop/2"
+      },
+      "response": {
+        "status": 302,
+        "headers": {
+          "Location": "https://news.google.com/hop/3"
+        }
+      }
+    },
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://news.google.com/hop/3"
+      },
+      "response": {
+        "status": 302,
+        "headers": {
+          "Location": "https://news.google.com/hop/4"
+        }
+      }
+    },
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://news.google.com/hop/4"
+      },
+      "response": {
+        "status": 302,
+        "headers": {
+          "Location": "https://news.google.com/hop/5"
+        }
+      }
+    },
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://news.google.com/hop/5"
+      },
+      "response": {
+        "status": 302,
+        "headers": {
+          "Location": "https://news.google.com/hop/6"
+        }
+      }
+    },
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://news.google.com/hop/6"
+      },
+      "response": {
+        "status": 302,
+        "headers": {
+          "Location": "https://news.google.com/hop/7"
+        }
+      }
+    },
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://news.google.com/hop/7"
+      },
+      "response": {
+        "status": 302,
+        "headers": {
+          "Location": "https://news.google.com/hop/8"
+        }
+      }
+    },
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://news.google.com/hop/8"
+      },
+      "response": {
+        "status": 302,
+        "headers": {
+          "Location": "https://news.google.com/hop/9"
+        }
+      }
+    },
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://news.google.com/hop/9"
+      },
+      "response": {
+        "status": 302,
+        "headers": {
+          "Location": "https://news.google.com/hop/10"
+        }
+      }
+    },
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://news.google.com/hop/10"
+      },
+      "response": {
+        "status": 302,
+        "headers": {
+          "Location": "https://news.google.com/hop/11"
+        }
+      }
+    },
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://news.google.com/hop/11"
+      },
+      "response": {
+        "status": 302,
+        "headers": {
+          "Location": "https://news.google.com/hop/12"
+        }
+      }
+    },
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://news.google.com/hop/12"
+      },
+      "response": {
+        "status": 302,
+        "headers": {
+          "Location": "https://example.com/never"
+        }
+      }
+    }
+  ]
+}

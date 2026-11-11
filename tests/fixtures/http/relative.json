@@ -1,0 +1,29 @@
+{
+  "note": "relative and protocol-relative Location headers",
+  "exchanges": [
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://news.google.com/rss/articles/CBMiHEFVX3lxTE9wYXF1ZUZpeHR1cmVUb2tlbjAwMDI"
+      },
+      "response": {
+        "status": 302,
+        "headers": {
+          "Location": "/hop/rel?x=1"
+        }
+      }
+    },
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://news.google.com/hop/rel?x=1"
+      },
+      "response": {
+        "status": 302,
+        "headers": {
+          "Location": "//example.org/path with space/story?id=7"
+        }
+      }
+    }
+  ]
+}
