@@ -1,0 +1,18 @@
+{
+  "note": "410 from Google",
+  "exchanges": [
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://news.google.com/rss/articles/CBMiHEFVX3lxTE9wYXF1ZUZpeHR1cmVUb2tlbjAwMDI"
+      },
+      "response": {
+        "status": 410,
+        "headers": {
+          "Content-Type": "text/html"
+        },
+        "body": "gone"
+      }
+    }
+  ]
+}

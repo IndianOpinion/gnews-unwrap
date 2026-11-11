@@ -1,0 +1,18 @@
+{
+  "note": "non-HTML 200",
+  "exchanges": [
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://news.google.com/rss/articles/CBMiHEFVX3lxTE9wYXF1ZUZpeHR1cmVUb2tlbjAwMDI"
+      },
+      "response": {
+        "status": 200,
+        "headers": {
+          "Content-Type": "application/pdf"
+        },
+        "body": "%PDF-1.7 binary"
+      }
+    }
+  ]
+}

@@ -1,0 +1,41 @@
+{
+    "note": "Wrapper shapes for the detector tests. Ids are synthetic.",
+    "S1": [
+        "https://news.google.com/rss/articles/CBMiHEFVX3lxTE9wYXF1ZUZpeHR1cmVUb2tlbjAwMDE?oc=5",
+        "https://news.google.com/rss/articles/CBMiHEFVX3lxTE9wYXF1ZUZpeHR1cmVUb2tlbjAwMDE?oc=5&hl=en-IN&gl=IN&ceid=IN:en",
+        "http://news.google.com/rss/articles/CBMiHEFVX3lxTE9wYXF1ZUZpeHR1cmVUb2tlbjAwMDE/",
+        "https://news.google.com/rss/articles/CBMiHEFVX3lxTE9wYXF1ZUZpeHR1cmVUb2tlbjAwMDE#frag"
+    ],
+    "S2": [
+        "https://news.google.com/articles/CBMiHEFVX3lxTE9wYXF1ZUZpeHR1cmVUb2tlbjAwMDE?hl=en-IN&gl=IN&ceid=IN:en"
+    ],
+    "S3": [
+        "https://news.google.com/read/CBMiHEFVX3lxTE9wYXF1ZUZpeHR1cmVUb2tlbjAwMDE?hl=en-IN"
+    ],
+    "S4": [
+        "https://news.google.com/__i/rss/rd/articles/CBMiHEFVX3lxTE9wYXF1ZUZpeHR1cmVUb2tlbjAwMDE?oc=5"
+    ],
+    "S5": [
+        "https://news.google.com/news/url?sa=t&fd=R&ct2=us&usg=AFQjCNE&clid=c3a7&url=https%3A%2F%2Fexample.com%2Fstory%2F1"
+    ],
+    "S6": [
+        "http://news.url.google.com/url?q=https://example.com/story/2&ct=ga",
+        "https://news.url.google.com/url?url=https%3A%2F%2Fexample.co.uk%2Fstory%2F3"
+    ],
+    "S7": [
+        "https://www.google.com/url?rct=j&sa=t&url=https://example.com/alert/story&ct=ga&cd=CAEYACoTMjA&usg=AOvVaw0",
+        "https://google.co.in/url?q=https%3A%2F%2Fexample.in%2Fstory"
+    ],
+    "not_an_article_link": [
+        "https://news.google.com/",
+        "https://news.google.com/home?hl=en-IN",
+        "https://news.google.com/topics/CAAqJggKIiBDQkFTRWdvSUwyMHZNRFZxYUdjU0FtVnVHZ0pWVXlnQVAB",
+        "https://news.google.com/stories/CAAqNggKIjBDQklTSGpvSmMzUnZjbmt0TXpZd1NoRUtEd2pQ",
+        "https://news.google.com/search?q=budget",
+        "https://news.google.com/rss/search?q=budget&hl=en-IN",
+        "https://news.google.com/rss/articles/",
+        "https://news.google.com/news/url?sa=t",
+        "https://news.url.google.com/other",
+        "https://news.google.com/en-IN/articles/CBMiHEFVX3lxTE9wYXF1ZUZpeHR1cmVUb2tlbjAwMDE"
+    ]
+}

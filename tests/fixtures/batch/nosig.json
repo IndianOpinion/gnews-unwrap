@@ -1,0 +1,18 @@
+{
+  "note": "article page without signature attributes",
+  "exchanges": [
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://news.google.com/rss/articles/CBMiHEFVX3lxTE9wYXF1ZUZpeHR1cmVUb2tlbjAwMDE"
+      },
+      "response": {
+        "status": 200,
+        "headers": {
+          "Content-Type": "text/html; charset=utf-8"
+        },
+        "body_file": "page-nosig.html"
+      }
+    }
+  ]
+}

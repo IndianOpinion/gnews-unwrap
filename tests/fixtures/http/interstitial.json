@@ -1,0 +1,18 @@
+{
+  "note": "200 interstitial with a meta refresh",
+  "exchanges": [
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://news.google.com/rss/articles/CBMiHEFVX3lxTE9wYXF1ZUZpeHR1cmVUb2tlbjAwMDI"
+      },
+      "response": {
+        "status": 200,
+        "headers": {
+          "Content-Type": "text/html; charset=utf-8"
+        },
+        "body_file": "../html/meta-refresh.html"
+      }
+    }
+  ]
+}

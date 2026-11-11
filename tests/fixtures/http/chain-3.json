@@ -1,0 +1,41 @@
+{
+  "note": "three hops, inside the limit",
+  "exchanges": [
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://news.google.com/rss/articles/CBMiHEFVX3lxTE9wYXF1ZUZpeHR1cmVUb2tlbjAwMDI"
+      },
+      "response": {
+        "status": 302,
+        "headers": {
+          "Location": "https://news.google.com/hop/1"
+        }
+      }
+    },
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://news.google.com/hop/1"
+      },
+      "response": {
+        "status": 301,
+        "headers": {
+          "Location": "/hop/2"
+        }
+      }
+    },
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://news.google.com/hop/2"
+      },
+      "response": {
+        "status": 307,
+        "headers": {
+          "Location": "https://example.com/a/b"
+        }
+      }
+    }
+  ]
+}

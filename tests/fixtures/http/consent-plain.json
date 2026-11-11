@@ -1,0 +1,17 @@
+{
+  "note": "consent wall pointing back at Google",
+  "exchanges": [
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://news.google.com/rss/articles/CBMiHEFVX3lxTE9wYXF1ZUZpeHR1cmVUb2tlbjAwMDI"
+      },
+      "response": {
+        "status": 302,
+        "headers": {
+          "Location": "https://consent.google.com/ml?continue=https%3A%2F%2Fnews.google.com%2Frss%2Farticles%2FCBMiHEFVX3lxTE9wYXF1ZUZpeHR1cmVUb2tlbjAwMDI&gl=IN"
+        }
+      }
+    }
+  ]
+}

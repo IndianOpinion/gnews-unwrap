@@ -1,0 +1,17 @@
+{
+  "note": "consent wall whose continue parameter already holds the target",
+  "exchanges": [
+    {
+      "request": {
+        "method": "GET",
+        "url": "https://news.google.com/rss/articles/CBMiHEFVX3lxTE9wYXF1ZUZpeHR1cmVUb2tlbjAwMDI"
+      },
+      "response": {
+        "status": 302,
+        "headers": {
+          "Location": "https://consent.google.com/ml?continue=https%3A%2F%2Fexample.com%2Fnews%2Fconsent-story&gl=IN&hl=en"
+        }
+      }
+    }
+  ]
+}
