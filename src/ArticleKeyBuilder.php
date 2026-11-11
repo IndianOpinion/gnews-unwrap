@@ -43,14 +43,14 @@ final class ArticleKeyBuilder
     /**
      * @param list<string> $trackingParams names to drop, case-insensitive, "prefix*" allowed
      * @param list<string>|null $allowParams when set, keep only these names (plus identity ones)
-     * @param bool $stripAmpMarkers drop /amp, /amp/, .amp, ?amp, ?amp=1 and outputType=amp
+     * @param bool $stripAmpMarkers drop /amp, /amp/, .amp, ?amp, ?amp=1 and outputType=amp (off by default)
      * @param array<string, list<string>> $identityParams outlet key => parameter names that identify the article
      */
     public function __construct(
         ?HostNormaliser $hosts = null,
         array $trackingParams = self::DEFAULT_TRACKING_PARAMS,
         ?array $allowParams = null,
-        private readonly bool $stripAmpMarkers = true,
+        private readonly bool $stripAmpMarkers = false,
         array $identityParams = [],
     ) {
         $this->hosts = $hosts ?? new HostNormaliser();

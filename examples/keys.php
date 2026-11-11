@@ -14,7 +14,8 @@ use IndianOpinion\GnewsUnwrap\ArticleKeyBuilder;
 use IndianOpinion\GnewsUnwrap\HostNormaliser;
 
 $hosts = new HostNormaliser(aliases: ['business.example.com' => 'example.com']);
-$keys = new ArticleKeyBuilder($hosts);
+// AMP markers are kept by default; this example turns stripping on.
+$keys = new ArticleKeyBuilder($hosts, stripAmpMarkers: true);
 
 $urls = [
     'https://www.example.com/news/story-1/?utm_source=twitter',

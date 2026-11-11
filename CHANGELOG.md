@@ -24,11 +24,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Acceptance rules for targets: no Google hosts, no own hosts, no IP or
   private targets, length and control-character checks.
 - Optional generic redirect mode with SSRF checks.
-- `resolveMany()`, concurrent through curl_multi when available.
+- `resolveMany()`, sequential by default, concurrent through curl_multi when
+  `concurrency` is above 1.
 - `HostNormaliser` for outlet keys, with a built-in multi-part suffix list,
   optional Public Suffix List file, IDN handling and aliases.
-- `ArticleKeyBuilder` for dedup keys: tracking parameters, AMP markers,
-  percent-encoding, dot segments, identity parameters.
+- `ArticleKeyBuilder` for dedup keys: tracking parameters, optional AMP
+  marker stripping, percent-encoding, dot segments, identity parameters.
 - `CurlTransport`, `StreamTransport`, `FakeTransport`, `ArrayCache`,
   `NullCache`, counters and a PSR-3-shaped logger hook.
 - `bootstrap.php` for use without Composer.

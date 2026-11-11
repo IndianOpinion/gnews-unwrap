@@ -72,11 +72,11 @@ final class ArticleKeyTest extends TestCase
         self::assertSame('example.com/s?q=a%20b', $k->key('https://example.com/s?q=a%20b'));
     }
 
-    /** T66, Q4: AMP markers stripped by default (decision 4), kept when switched off. */
+    /** T66, Q4: AMP markers kept by default (PRD 4.7.8), stripped when switched on. */
     public function testAmpMarkers(): void
     {
-        $strip = new ArticleKeyBuilder();
-        $keep = new ArticleKeyBuilder(stripAmpMarkers: false);
+        $strip = new ArticleKeyBuilder(stripAmpMarkers: true);
+        $keep = new ArticleKeyBuilder();
         $cases = [
             'https://example.com/news/story/amp' => ['example.com/news/story', 'example.com/news/story/amp'],
             'https://example.com/news/story/amp/' => ['example.com/news/story', 'example.com/news/story/amp'],

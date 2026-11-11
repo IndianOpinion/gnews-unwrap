@@ -47,7 +47,7 @@ final class Config
      * @param int $breakerWindow seconds in which those results must fall
      * @param int $breakerCooldown seconds the breaker stays open
      * @param int $pauseMs pause between network resolutions (and between concurrent rounds)
-     * @param int $concurrency links resolved at once by resolveMany() on a concurrent transport; 1 is sequential
+     * @param int $concurrency links resolved at once by resolveMany() on a concurrent transport; 1 (the default) is sequential
      * @param list<string> $ownHosts hosts that are never a valid target (your own sites)
      * @param list<string> $extraGoogleHosts added to the built-in Google host list
      * @param bool $allowPrivateTargets accept IP literal, localhost and private targets
@@ -58,7 +58,7 @@ final class Config
      * @param array<string, string> $outletAliases host or "*.suffix" => outlet key
      * @param list<string>|null $trackingParams query names dropped from the article key; null means the default list
      * @param list<string>|null $allowParams keep only these query names in the article key
-     * @param bool $stripAmpMarkers remove AMP markers from the article key
+     * @param bool $stripAmpMarkers remove AMP markers from the article key (off: some outlets serve other articles there)
      * @param array<string, list<string>> $identityParams host => query names that identify the article
      */
     public function __construct(
@@ -78,7 +78,7 @@ final class Config
         public readonly int $breakerWindow = 60,
         public readonly int $breakerCooldown = 300,
         public readonly int $pauseMs = 0,
-        public readonly int $concurrency = 4,
+        public readonly int $concurrency = 1,
         array $ownHosts = [],
         array $extraGoogleHosts = [],
         public readonly bool $allowPrivateTargets = false,
@@ -89,7 +89,7 @@ final class Config
         array $outletAliases = [],
         ?array $trackingParams = null,
         ?array $allowParams = null,
-        public readonly bool $stripAmpMarkers = true,
+        public readonly bool $stripAmpMarkers = false,
         array $identityParams = [],
     ) {
         $methods ??= Method::switchable();
