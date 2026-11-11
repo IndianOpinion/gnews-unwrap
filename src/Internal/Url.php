@@ -42,6 +42,22 @@ final class Url
         ];
     }
 
+    /**
+     * True when the authority is a plain host with an optional port (no
+     * userinfo) and the URL holds no backslash. URL parsers disagree on
+     * such URLs (parse_url, curl and browsers can pick different hosts), so
+     * generic mode refuses them rather than guess which host is contacted.
+     */
+    public static function hasPlainAuthority(string $url): bool
+    {
+        $parts = self::split($url);
+        if ($parts === null || $parts['authority'] === null) {
+            return false;
+        }
+
+        return !str_contains($parts['authority'], '@') && !str_contains($url, '\\');
+    }
+
     /** True when the string holds an ASCII control character or whitespace. */
     public static function hasControlOrSpace(string $value): bool
     {

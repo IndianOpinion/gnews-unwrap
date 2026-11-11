@@ -82,4 +82,24 @@ final class TargetValidatorTest extends TestCase
         self::assertFalse($guard->isBlocked('example.com'));
         self::assertFalse($guard->isBlocked('93.184.215.14'));
     }
+
+    /** Address ranges: IPv4 special ranges, IPv6 ranges and IPv6 forms that embed IPv4. */
+    public function testAddressGuardRanges(): void
+    {
+        $blocked = [
+            '224.0.0.1', '255.255.255.255', '198.18.0.1', '192.0.2.10', '192.0.0.8',
+            '::', '::1', 'fe90::1', 'febf::1', 'fc00::1', 'ff02::1', '2001:db8::1',
+            '::ffff:10.0.0.1', '64:ff9b::a9fe:a9fe', '2002:7f00:1::', '2002:a9fe:a9fe::1',
+            'not an ip', '',
+        ];
+        foreach ($blocked as $ip) {
+            self::assertTrue(AddressGuard::isBlockedIp($ip), $ip);
+        }
+        foreach (['8.8.8.8', '93.184.215.14', '2606:4700::1111', '::ffff:8.8.8.8', '2002:5db8:d70e::1', '64:ff9b::808:808'] as $ip) {
+            self::assertFalse(AddressGuard::isBlockedIp($ip), $ip);
+        }
+        $guard = new AddressGuard(static fn (string $h): array => ['93.184.215.14', 'fd12::1']);
+        self::assertTrue($guard->isBlocked('mixed.example'), 'one private answer among public ones blocks the host');
+        self::assertTrue($guard->isBlocked('[fe80::1%25eth0]'));
+    }
 }

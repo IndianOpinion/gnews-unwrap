@@ -9,6 +9,7 @@ use IndianOpinion\GnewsUnwrap\Cache\ArrayCache;
 use IndianOpinion\GnewsUnwrap\Cache\NullCache;
 use IndianOpinion\GnewsUnwrap\Config;
 use IndianOpinion\GnewsUnwrap\Exception\TransportContractException;
+use IndianOpinion\GnewsUnwrap\Exception\TransportException;
 use IndianOpinion\GnewsUnwrap\LegacyIdDecoder;
 use IndianOpinion\GnewsUnwrap\Log\MemoryLogger;
 use IndianOpinion\GnewsUnwrap\Method;
@@ -16,7 +17,9 @@ use IndianOpinion\GnewsUnwrap\Reason;
 use IndianOpinion\GnewsUnwrap\Tests\Support\BrokenConcurrentTransport;
 use IndianOpinion\GnewsUnwrap\Tests\Support\TestCase;
 use IndianOpinion\GnewsUnwrap\Transport\FakeConcurrentTransport;
+use IndianOpinion\GnewsUnwrap\Transport\ConcurrentTransport;
 use IndianOpinion\GnewsUnwrap\Transport\FakeTransport;
+use IndianOpinion\GnewsUnwrap\Transport\Request;
 use IndianOpinion\GnewsUnwrap\Transport\Response;
 use IndianOpinion\GnewsUnwrap\Unwrapper;
 
@@ -207,7 +210,7 @@ final class UnwrapperTest extends TestCase
     public function testTwoWrappersSameArticle(): void
     {
         $transport = $this->transport('batch/ok.json');
-        $transport->redirect(self::WRAPPER_B, 'https://amp.example.com/news/2026/11/11/budget-session-opens/amp/?utm_source=gn');
+        $transport->redirect(self::WRAPPER_B, 'https://www.example.com/news/2026/11/11/budget-session-opens/?utm_source=gn');
         $u = $this->unwrapper($transport);
         $a = $u->resolve('https://news.google.com/articles/' . self::ID_A . '?hl=en-IN');
         $b = $u->resolve(self::WRAPPER_B);
@@ -215,6 +218,12 @@ final class UnwrapperTest extends TestCase
         self::assertTrue($b->resolved);
         self::assertSame($u->articleKey($a->output), $u->articleKey($b->output));
         self::assertSame('example.com/news/2026/11/11/budget-session-opens', $u->articleKey($a->output));
+
+        // An AMP variant matches only when the caller turns AMP stripping on.
+        $amp = 'https://amp.example.com/news/2026/11/11/budget-session-opens/amp/';
+        self::assertNotSame($u->articleKey($a->output), $u->articleKey($amp));
+        $ampKeys = $this->unwrapper($transport, (new Config())->withStripAmpMarkers(true));
+        self::assertSame($ampKeys->articleKey($a->output), $ampKeys->articleKey($amp));
     }
 
     /** T53: list resolution keeps order and keys, sequential and concurrent. */
@@ -327,8 +336,90 @@ final class UnwrapperTest extends TestCase
     public function testTransportContractViolation(): void
     {
         $bad = new BrokenConcurrentTransport();
-        $u = new Unwrapper(null, $bad, null, $this->clock);
+        $u = new Unwrapper((new Config())->withConcurrency(2), $bad, null, $this->clock);
         $this->expectException(TransportContractException::class);
         $u->resolveMany([self::PAGE_A]);
+    }
+
+    /** Concurrent resolveMany(): a failure on one link does not touch the others. */
+    public function testResolveManyConcurrentIsolatesErrors(): void
+    {
+        $transport = new FakeConcurrentTransport($this->clock);
+        $transport->load(self::fixture('batch/ok.json'));
+        $broken = 'https://news.google.com/rss/articles/CBMiHEFVX3lxTE9wYXF1ZUZpeHR1cmVUb2tlbjAwMDM';
+        $transport->on($broken, TransportException::network('connection reset'));
+        $u = $this->unwrapper($transport, (new Config())->withConcurrency(4));
+
+        $results = $u->resolveMany([$broken, self::PAGE_A]);
+        self::assertTrue($results[self::PAGE_A]->resolved);
+        self::assertFalse($results[$broken]->resolved);
+        self::assertSame(Reason::NetworkError, $results[$broken]->reason);
+        self::assertSame($broken, $results[$broken]->output);
+    }
+
+    /** A concurrent transport that throws fails its round with network_error, never escapes. */
+    public function testResolveManyConcurrentTransportThrows(): void
+    {
+        $throwing = new class implements ConcurrentTransport {
+            public function send(Request $request): Response
+            {
+                throw new \RuntimeException('boom');
+            }
+
+            public function sendMany(array $requests): array
+            {
+                throw new \RuntimeException('multi boom');
+            }
+        };
+        $legacy = 'https://news.google.com/rss/articles/' . LegacyIdDecoder::encode('https://example.com/offline');
+        $u = new Unwrapper((new Config())->withConcurrency(4), $throwing, new ArrayCache(10, $this->clock), $this->clock);
+        $results = $u->resolveMany([self::PAGE_A, $legacy, self::WRAPPER_B]);
+
+        self::assertSame(Reason::NetworkError, $results[self::PAGE_A]->reason);
+        self::assertSame(Reason::NetworkError, $results[self::WRAPPER_B]->reason);
+        self::assertTrue($results[$legacy]->resolved, 'offline links are unaffected');
+    }
+
+    /** Generic mode checks every hop, not only the first, and refuses ambiguous authorities. */
+    public function testGenericModeChecksEveryHop(): void
+    {
+        $guard = new AddressGuard(static fn (string $h): array => match ($h) {
+            'internal.example' => ['10.0.0.8'],
+            'v6.example' => ['2606:4700::1111', '::1'],
+            default => ['93.184.215.14'],
+        });
+        $config = (new Config())->withGenericMode(true);
+
+        $chain = (new FakeTransport($this->clock))
+            ->redirect('https://sho.rt/a', 'https://hop.example/b')
+            ->redirect('https://hop.example/b', 'https://hop2.example/c')
+            ->redirect('https://hop2.example/c', 'https://internal.example/admin');
+        $r = $this->unwrapper($chain, $config, null, null, $guard)->resolve('https://sho.rt/a');
+        self::assertSame(Reason::PrivateAddress, $r->reason);
+        self::assertCount(3, $chain->requests(), 'the private hop itself is never requested');
+
+        $v6 = (new FakeTransport($this->clock))->redirect('https://sho.rt/a', 'https://v6.example/x');
+        $r = $this->unwrapper($v6, $config, null, null, $guard)->resolve('https://sho.rt/a');
+        self::assertSame(Reason::PrivateAddress, $r->reason, 'an AAAA record on loopback is refused');
+
+        foreach (['https://user@example.com/x', 'https://example.com\\@127.0.0.1/x'] as $hop) {
+            $odd = (new FakeTransport($this->clock))->redirect('https://sho.rt/a', $hop);
+            $r = $this->unwrapper($odd, $config, null, null, $guard)->resolve('https://sho.rt/a');
+            self::assertFalse($r->resolved, $hop);
+            self::assertCount(1, $odd->requests(), $hop);
+        }
+    }
+
+    /** A positive cache entry that today's rules reject is treated as a miss. */
+    public function testCachedTargetIsRevalidated(): void
+    {
+        $cache = new ArrayCache(10, $this->clock);
+        $transport = $this->transport('batch/ok.json');
+        self::assertSame(Method::BatchExecute, $this->unwrapper($transport, null, $cache)->resolve(self::PAGE_A)->method);
+        self::assertSame(Method::Cache, $this->unwrapper($transport, null, $cache)->resolve(self::PAGE_A)->method);
+
+        $own = $this->unwrapper($transport, (new Config())->withOwnHosts(['example.com']), $cache)->resolve(self::PAGE_A);
+        self::assertFalse($own->resolved);
+        self::assertNotSame(Method::Cache, $own->method);
     }
 }

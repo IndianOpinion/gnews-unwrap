@@ -255,7 +255,7 @@ final class Unwrapper
             foreach ($active as $key => $entry) {
                 $requests[$key] = $entry['machine']->current();
             }
-            $responses = $transport->sendMany($requests);
+            $responses = $this->sendMany($transport, $requests);
 
             foreach ($active as $key => $entry) {
                 $response = $responses[$key] ?? TransportException::network('Transport returned no response for this request.');
@@ -276,6 +276,27 @@ final class Unwrapper
         }
 
         return $ordered;
+    }
+
+    /**
+     * sendMany() with the same isolation as sendOne(): a transport that
+     * throws fails every request of this round with network_error instead
+     * of escaping resolveMany(). Per-request failures stay per request.
+     *
+     * @param array<int, Request> $requests
+     * @return array<array-key, mixed>
+     */
+    private function sendMany(ConcurrentTransport $transport, array $requests): array
+    {
+        try {
+            return $transport->sendMany($requests);
+        } catch (\TypeError $e) {
+            throw new TransportContractException('ConcurrentTransport::sendMany() must return an array: ' . $e->getMessage(), 0, $e);
+        } catch (\Throwable $e) {
+            $error = $e instanceof TransportException ? $e : TransportException::network(get_class($e) . ': ' . $e->getMessage(), $e);
+
+            return array_fill_keys(array_keys($requests), $error);
+        }
     }
 
     private function sendOne(Request $request): Response|TransportException
@@ -656,7 +677,12 @@ final class Unwrapper
 
         while (true) {
             $parts = Url::parse($url);
-            if ($parts === null || $this->guard->isBlocked($parts['host'])) {
+            if ($parts === null || !Url::hasPlainAuthority($url)) {
+                $run->fail($method, Reason::BadTarget);
+
+                return new Outcome(null, null);
+            }
+            if ($this->guard->isBlocked($parts['host'])) {
                 $run->fail($method, Reason::PrivateAddress);
 
                 return new Outcome(null, null);
@@ -896,6 +922,13 @@ final class Unwrapper
         }
         $stored = Result::fromArray($data);
         if ($stored === null) {
+            $this->cache->delete($cacheKey);
+
+            return null;
+        }
+        if ($stored->resolved && $this->validator->accept($stored->output) === null) {
+            // Fail closed on the target: a stored target that today's rules
+            // reject (own hosts added since, a tampered store) is a miss.
             $this->cache->delete($cacheKey);
 
             return null;

@@ -31,7 +31,8 @@ final class ConfigTest extends TestCase
         self::assertSame(3_600, $c->negativeTtl);
         self::assertSame([3, 60, 300], [$c->breakerThreshold, $c->breakerWindow, $c->breakerCooldown]);
         self::assertSame(0, $c->pauseMs);
-        self::assertTrue($c->stripAmpMarkers);
+        self::assertFalse($c->stripAmpMarkers);
+        self::assertSame(1, $c->concurrency);
         self::assertSame('en', $c->acceptLanguage);
         self::assertSame('gnews-unwrap/' . Version::VERSION . ' (+https://github.com/IndianOpinion/gnews-unwrap)', $c->userAgentHeader());
     }
@@ -75,6 +76,8 @@ final class ConfigTest extends TestCase
         if (extension_loaded('curl')) {
             yield 'curl option' => [static fn () => new CurlTransport([CURLOPT_SSL_VERIFYPEER => false])];
             yield 'curl follow' => [static fn () => new CurlTransport([CURLOPT_FOLLOWLOCATION => true])];
+            yield 'curl proxy tls' => [static fn () => new CurlTransport([CURLOPT_PROXY_SSL_VERIFYPEER => false])];
+            yield 'curl header in body' => [static fn () => new CurlTransport([CURLOPT_HEADER => true])];
         } else {
             yield 'curl missing' => [static fn () => new CurlTransport()];
         }

@@ -99,7 +99,7 @@ final class BatchExecute
             // Chunked form: length lines followed by JSON lines.
             foreach (preg_split('/\R/', $body) ?: [] as $line) {
                 $line = trim($line);
-                if ($line === '' || ctype_digit($line)) {
+                if ($line === '' || preg_match('/^\d+$/', $line) === 1) {
                     continue;
                 }
                 $decoded = self::json($line);

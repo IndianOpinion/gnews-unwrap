@@ -127,4 +127,35 @@ final class LegacyIdDecoderTest extends TestCase
         }
         $this->addToAssertionCount(300);
     }
+
+    /** T22: random bytes behind a valid legacy header never crash and never yield a non-URL. */
+    public function testFuzzAfterValidHeader(): void
+    {
+        mt_srand(20261111);
+        $decoder = new LegacyIdDecoder();
+        $b64 = static fn (string $bytes): string => rtrim(strtr(base64_encode($bytes), '+/', '-_'), '=');
+        $random = static function (int $n): string {
+            $s = '';
+            for ($i = 0; $i < $n; $i++) {
+                $s .= chr(mt_rand(0, 255));
+            }
+
+            return $s;
+        };
+        $headers = ["\x08\x13\x22", "\x08\x13\x22\x80\x01", "\x08\x02\x22\x10https://", "\x08\x13\x22\x14https://example.com/"];
+        $before = memory_get_usage();
+        for ($i = 0; $i < 2000; $i++) {
+            $bytes = $headers[$i % count($headers)] . $random(mt_rand(0, 300));
+            foreach ([$b64($bytes), base64_encode($bytes), $random(mt_rand(1, 64))] as $id) {
+                $decoded = $decoder->decode($id);
+                if ($decoded->url === null) {
+                    self::assertNotNull($decoded->reason);
+                } else {
+                    self::assertMatchesRegularExpression('~^https?://~i', $decoded->url);
+                    self::assertNull($decoded->reason);
+                }
+            }
+        }
+        self::assertLessThan(1_000_000, memory_get_usage() - $before);
+    }
 }

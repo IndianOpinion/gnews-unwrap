@@ -18,7 +18,6 @@ enum Reason: string
     case MalformedId = 'malformed_id';
 
     // Offline methods.
-    case MissingParameter = 'missing_parameter';
     case OpaqueId = 'opaque_id';
     case UnknownIdFormat = 'unknown_id_format';
     case DecodeFailed = 'decode_failed';
